@@ -1,0 +1,223 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* ── Light tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --bg: #fff8f5;
+  --bg-2: #fcebe1;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: #ffffff;
+  --text: #221a14;
+  --text-h: #15110e;
+  --border: rgba(145, 75, 52, 0.1);
+  --accent: #914b34;
+  --accent-2: #d48166;
+  --shadow: 0 18px 50px rgba(54, 39, 26, 0.10);
+  --soft-shadow: 0 8px 24px rgba(54, 39, 26, 0.06);
+}
+
+/* ── Dark tokens ──────────────────────────────────────────────────────────── */
+.dark {
+  --bg: #0a0704;
+  --bg-2: #14100c;
+  --surface: rgba(20, 14, 10, 0.85);
+  --surface-strong: #1a1210;
+  --text: #f0e8e4;
+  --text-h: #faf5f2;
+  --border: rgba(255, 180, 150, 0.08);
+  --accent: #e8936a;
+  --accent-2: #c26a44;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  --soft-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease, color 0.3s ease;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ── Glass Cards ──────────────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(145, 75, 52, 0.1);
+  box-shadow: 0 4px 24px rgba(54, 39, 26, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  box-shadow: 0 8px 32px rgba(145, 75, 52, 0.12);
+  border-color: rgba(145, 75, 52, 0.18);
+}
+
+.dark .glass-card {
+  background: rgba(255, 200, 170, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 180, 140, 0.07);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,200,160,0.06);
+}
+
+.dark .glass-card:hover {
+  border-color: rgba(232, 147, 106, 0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(232, 147, 106, 0.04);
+}
+
+/* ── Satin Button ─────────────────────────────────────────────────────────── */
+.satin-button {
+  background: linear-gradient(135deg, #914b34 0%, #73341f 100%);
+  box-shadow: 0 4px 15px -3px rgba(145, 75, 52, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.satin-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px -3px rgba(145, 75, 52, 0.5);
+}
+
+.dark .satin-button {
+  background: linear-gradient(135deg, #c97050 0%, #a04e32 100%);
+  box-shadow: 0 4px 18px -3px rgba(200, 100, 60, 0.4);
+}
+
+/* ── Topbar dark mode ─────────────────────────────────────────────────────── */
+.dark header {
+  background: rgba(10, 7, 4, 0.88) !important;
+  border-bottom-color: rgba(255, 180, 140, 0.08) !important;
+}
+
+/* ── Sidebar dark mode ────────────────────────────────────────────────────── */
+.dark aside {
+  background: linear-gradient(180deg, #100c09 0%, #0d0906 100%) !important;
+  border-right-color: rgba(255, 180, 140, 0.06) !important;
+}
+
+/* ── Atmospheric glow blobs (dark only) ───────────────────────────────────── */
+.dark-glow-layer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.dark .dark-glow-layer {
+  display: block;
+}
+
+.dark-glow-layer .glow-1 {
+  position: absolute;
+  top: -15%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(145, 75, 52, 0.14) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: glowDrift1 12s ease-in-out infinite alternate;
+}
+
+.dark-glow-layer .glow-2 {
+  position: absolute;
+  bottom: -15%;
+  right: -10%;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(100, 45, 25, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: glowDrift2 15s ease-in-out infinite alternate;
+}
+
+.dark-glow-layer .glow-3 {
+  position: absolute;
+  top: 40%;
+  left: 35%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(180, 80, 50, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(120px);
+  animation: glowDrift3 18s ease-in-out infinite alternate;
+}
+
+@keyframes glowDrift1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, 60px) scale(1.08); }
+}
+@keyframes glowDrift2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-50px, -40px) scale(1.05); }
+}
+@keyframes glowDrift3 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, -50px) scale(1.1); }
+}
+
+/* ── Main content above glow layer ───────────────────────────────────────── */
+.dark .app-shell { position: relative; z-index: 1; }
+
+/* ── Stagger animation ───────────────────────────────────────────────────── */
+.stagger-in {
+  animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212, 129, 102, 0.5); border-radius: 10px; }
+.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(145, 75, 52, 0.4); }
+
+/* ── Selection & Focus ────────────────────────────────────────────────────── */
+::selection { background: rgba(184, 92, 56, 0.18); color: var(--text-h); }
+.dark ::selection { background: rgba(232, 147, 106, 0.22); color: #fff5f0; }
+
+*:focus-visible { outline: 2px solid rgba(184, 92, 56, 0.55); outline-offset: 2px; }
+.dark *:focus-visible { outline: 2px solid rgba(232, 147, 106, 0.55); }
+
+/* ── Select / Input dark overrides ───────────────────────────────────────── */
+.dark select,
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="tel"],
+.dark input[type="date"] {
+  color-scheme: dark;
+}
+
+/* ── Mobile bottom nav padding (avoid content overlap) ───────────────────── */
+@media (max-width: 767px) {
+  main { padding-bottom: 5rem !important; }
+}
+
+/* ── PDF Print stylesheet ─────────────────────────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  .dark-glow-layer { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .glass-card {
+    background: white !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  aside, header, nav { display: none !important; }
+  main { padding: 0 !important; overflow: visible !important; }
+}

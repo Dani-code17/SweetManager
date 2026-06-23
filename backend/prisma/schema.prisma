@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Utilisateur {
+  id                String         @id @default(uuid())
+  nom               String         @db.VarChar(100)
+  email             String         @unique @db.VarChar(255)
+  motDePasseHash    String         @db.VarChar(255)
+  nomBoutique       String?        @db.VarChar(150)
+  telephone         String?        @db.VarChar(30)
+  devise            String         @default("FCFA") @db.VarChar(10)
+  seuilAlerteDefaut Decimal        @default(5) @db.Decimal(10, 3)
+  creeLe            DateTime       @default(now())
+  clients           Client[]
+  commandes         Commande[]
+  depenses          Depense[]
+  produits          Produit[]
+  stockArticles     StockArticle[]
+
+  @@index([email])
+}
+
+model Client {
+  id            String      @id @default(uuid())
+  nom           String      @db.VarChar(150)
+  telephone     String?     @db.VarChar(30)
+  email         String?     @db.VarChar(255)
+  adresse       String?
+  creeLe        DateTime    @default(now())
+  utilisateurId String
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  commandes     Commande[]
+
+  @@index([utilisateurId])
+}
+
+model Produit {
+  id             String               @id @default(uuid())
+  nom            String               @db.VarChar(150)
+  description    String?
+  prix           Decimal              @db.Decimal(10, 2)
+  creeLe         DateTime             @default(now())
+  categorie      String?              @db.VarChar(100)
+  photo          String?
+  utilisateurId  String
+  lignesCommande LigneCommande[]
+  utilisateur    Utilisateur          @relation(fields: [utilisateurId], references: [id])
+  ingredients    RecetteFabrication[]
+
+  @@index([utilisateurId])
+}
+
+model RecetteFabrication {
+  id             String       @id @default(uuid())
+  produitId      String
+  stockArticleId String
+  quantite       Decimal      @db.Decimal(10, 3)
+  produit        Produit      @relation(fields: [produitId], references: [id], onDelete: Cascade)
+  stockArticle   StockArticle @relation(fields: [stockArticleId], references: [id])
+
+  @@unique([produitId, stockArticleId])
+  @@index([produitId])
+}
+
+model Commande {
+  id             String          @id @default(uuid())
+  clientId       String
+  statut         StatutCommande  @default(en_attente)
+  dateLivraison  DateTime?
+  montantTotal   Decimal         @db.Decimal(10, 2)
+  notes          String?
+  creeLe         DateTime        @default(now())
+  utilisateurId  String
+  client         Client          @relation(fields: [clientId], references: [id])
+  utilisateur    Utilisateur     @relation(fields: [utilisateurId], references: [id])
+  lignesCommande LigneCommande[]
+  paiements      Paiement[]
+
+  @@index([utilisateurId])
+  @@index([clientId])
+  @@index([statut])
+}
+
+model LigneCommande {
+  id           String   @id @default(uuid())
+  commandeId   String
+  produitId    String
+  quantite     Int
+  prixUnitaire Decimal  @db.Decimal(10, 2)
+  commande     Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  produit      Produit  @relation(fields: [produitId], references: [id])
+
+  @@index([commandeId])
+  @@index([produitId])
+}
+
+model Paiement {
+  id           String          @id @default(uuid())
+  commandeId   String
+  montant      Decimal         @db.Decimal(10, 2)
+  methode      MethodePaiement
+  datePaiement DateTime        @default(now())
+  commande     Commande        @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+
+  @@index([commandeId])
+}
+
+model Depense {
+  id            String      @id @default(uuid())
+  utilisateurId String
+  montant       Decimal     @db.Decimal(10, 2)
+  categorie     String      @db.VarChar(100)
+  fournisseur   String?     @db.VarChar(150)
+  description   String?
+  dateDepense   DateTime    @db.Date
+  recuUrl       String?     @db.VarChar(500)
+  modePaiement  String?     @db.VarChar(50)
+  creeLe        DateTime    @default(now())
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+
+  @@index([utilisateurId])
+  @@index([categorie])
+}
+
+model StockArticle {
+  id            String               @id @default(uuid())
+  utilisateurId String
+  nom           String               @db.VarChar(150)
+  categorie     String?              @db.VarChar(100)
+  quantite      Decimal              @default(0) @db.Decimal(10, 3)
+  unite         String               @db.VarChar(30)
+  seuilAlerte   Decimal?             @db.Decimal(10, 3)
+  misAJourLe    DateTime             @updatedAt
+  mouvements    MouvementStock[]
+  recettes      RecetteFabrication[]
+  utilisateur   Utilisateur          @relation(fields: [utilisateurId], references: [id])
+
+  @@index([utilisateurId])
+  @@index([nom])
+}
+
+model MouvementStock {
+  id             String             @id @default(uuid())
+  stockArticleId String
+  quantite       Decimal            @db.Decimal(10, 3)
+  type           TypeMouvementStock
+  motif          String?
+  creeLe         DateTime           @default(now())
+  stockArticle   StockArticle       @relation(fields: [stockArticleId], references: [id], onDelete: Cascade)
+
+  @@index([stockArticleId])
+}
+
+enum StatutCommande {
+  en_attente
+  preparation
+  prete
+  livree
+  annulee
+}
+
+enum MethodePaiement {
+  cash
+  orange_money
+  mtn_money
+  wave
+  banque
+}
+
+enum CanalVente {
+  boutique
+  livraison
+  commande_speciale
+}
+
+enum TypeMouvementStock {
+  entree
+  sortie
+}
