@@ -21,7 +21,7 @@ const Connexion = () => {
     setChargement(true)
     setErreur('')
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/connecter', { email, motDePasse })
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/connecter`, { email, motDePasse })
       connecter(res.data.utilisateur, res.data.token)
       navigate('/tableau-de-bord')
     } catch (err) {
