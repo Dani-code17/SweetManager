@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 
 const Inscription = () => {
@@ -13,16 +13,34 @@ const Inscription = () => {
 
   useEffect(() => { setMounted(true) }, [])
 
+  const passwordStrength = (() => {
+    const p = form.motDePasse
+    if (!p) return { score: 0, label: '', color: '' }
+    let s = 0
+    if (p.length >= 8) s++
+    if (p.length >= 12) s++
+    if (/[A-Z]/.test(p)) s++
+    if (/[0-9]/.test(p)) s++
+    if (/[^A-Za-z0-9]/.test(p)) s++
+    if (s <= 1) return { score: 1, label: 'Faible', color: '#ef4444' }
+    if (s <= 3) return { score: 2, label: 'Moyen', color: '#f59e0b' }
+    if (s <= 4) return { score: 3, label: 'Bon', color: '#0FBD8C' }
+    return { score: 4, label: 'Excellent', color: '#2AD39B' }
+  })()
+
+  // Palette adaptée pour ce design centré (Clair/Sombre) - Couleurs Sequence
   const t = dark ? {
-    bg: '#1a1210', bg2: '#221815', bg3: '#2e1f1a',
-    txt: '#f0e8e4', txt2: '#9a8880', txt3: '#5a4a44',
-    acc: '#c97a68', acc2: '#b5695a',
-    brd: '#3a2820', inp: '#2a1c18', inpbrd: '#3a2820',
+    bg: '#0B1110', card: '#121C1A',
+    txt: '#F8FAFC', txt2: '#94A3B8',
+    acc: '#2AD39B', brd: 'rgba(42, 211, 155, 0.15)',
+    inp: '#1A2826', inpbrd: 'rgba(42, 211, 155, 0.25)', btnBg: '#2AD39B', btnTxt: '#0B1110',
+    glow: 'radial-gradient(circle at center, rgba(42, 211, 155, 0.12) 0%, transparent 60%)'
   } : {
-    bg: '#fdf8f5', bg2: '#ffffff', bg3: '#f5ede8',
-    txt: '#2a1f1a', txt2: '#8a7570', txt3: '#b8a8a2',
-    acc: '#b5695a', acc2: '#d4927f',
-    brd: '#ecddd8', inp: '#ffffff', inpbrd: '#ddd0ca',
+    bg: '#F6F8F9', card: '#FFFFFF',
+    txt: '#101828', txt2: '#475467',
+    acc: '#0F5B5A', brd: 'rgba(15, 91, 90, 0.12)',
+    inp: '#FFFFFF', inpbrd: '#D0D5DD', btnBg: '#101828', btnTxt: '#FFFFFF',
+    glow: 'radial-gradient(circle at center, rgba(42, 211, 155, 0.15) 0%, transparent 60%)'
   }
 
   const gererSoumission = async (e) => {
@@ -51,154 +69,168 @@ const Inscription = () => {
     }
   }
 
-  const champ = (key, label, type = 'text', placeholder = '') => (
-    <div style={{ marginBottom: 18 }}>
-      <label style={{ display: 'block', fontSize: 10, fontWeight: 500, letterSpacing: '.12em', textTransform: 'uppercase', color: t.txt3, marginBottom: 7 }}>
-        {label}
-      </label>
-      <div style={{ position: 'relative' }}>
-        <input
-          type={key.includes('mot') || key === 'confirmation' ? (showPass ? 'text' : 'password') : type}
-          value={form[key]}
-          onChange={e => setForm({ ...form, [key]: e.target.value })}
-          placeholder={placeholder}
-          required
-          style={{
-            width: '100%', background: t.inp, border: `1px solid ${t.inpbrd}`,
-            borderRadius: 8, padding: key.includes('mot') || key === 'confirmation' ? '12px 44px 12px 16px' : '12px 16px',
-            fontSize: 13, fontFamily: "'Jost', sans-serif", color: t.txt, outline: 'none',
-          }}
-          onFocus={e => e.target.style.borderColor = t.acc}
-          onBlur={e => e.target.style.borderColor = t.inpbrd}
-        />
-        {(key === 'motDePasse') && (
-          <button type="button" onClick={() => setShowPass(v => !v)}
-            style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: 44, background: 'none', border: 'none', cursor: 'pointer', color: t.txt3, fontSize: 14 }}>
-            {showPass ? '🙈' : '👁'}
-          </button>
+  const champ = (key, label, type = 'text', placeholder = '') => {
+    const isPwd = key === 'motDePasse' || key === 'confirmation'
+    return (
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: t.txt, marginBottom: 8, transition: 'color .3s' }}>
+          {label}
+        </label>
+        <div style={{ position: 'relative' }}>
+          <input
+            type={isPwd ? (showPass ? 'text' : 'password') : type}
+            value={form[key]}
+            onChange={e => setForm({ ...form, [key]: e.target.value })}
+            placeholder={placeholder}
+            required
+            style={{
+              width: '100%', background: t.inp, border: `1px solid ${t.inpbrd}`, borderRadius: 12,
+              padding: isPwd ? '14px 48px 14px 16px' : '14px 16px', fontSize: 15, color: t.txt, outline: 'none',
+              transition: 'border-color .2s, box-shadow .2s, background .3s',
+            }}
+            onFocus={e => {
+              e.target.style.borderColor = '#2AD39B'
+              e.target.style.boxShadow = `0 0 0 4px ${dark ? 'rgba(42,211,155,0.1)' : 'rgba(42,211,155,0.15)'}`
+            }}
+            onBlur={e => { e.target.style.borderColor = t.inpbrd; e.target.style.boxShadow = 'none' }}
+          />
+          {isPwd && (
+            <button
+              type="button"
+              onClick={() => setShowPass(v => !v)}
+              style={{
+                position: 'absolute', right: 4, top: 4, bottom: 4, width: 40,
+                background: 'none', border: 'none', cursor: 'pointer', color: t.txt2, fontSize: 16,
+              }}
+            >
+              {showPass ? '🙈' : '👁'}
+            </button>
+          )}
+        </div>
+        {key === 'motDePasse' && form.motDePasse && (
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, height: 4, background: t.inpbrd, borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 2, width: `${(passwordStrength.score / 4) * 100}%`,
+                background: passwordStrength.color, transition: 'width .3s ease, background .3s ease',
+              }} />
+            </div>
+            <span style={{ fontSize: 11, color: passwordStrength.color, fontWeight: 600, minWidth: 60, textAlign: 'right' }}>
+              {passwordStrength.label}
+            </span>
+          </div>
         )}
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 760px) { .left-panel { display: none !important; } .right-panel { width: 100% !important; } }
-      `}</style>
+    <div style={{
+      minHeight: '100vh', background: t.bg, fontFamily: "'Jost', sans-serif",
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden', transition: 'background .3s ease'
+    }}>
+      {/* Background Glow */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        background: t.glow, pointerEvents: 'none', zIndex: 0
+      }}></div>
 
-      <div style={{ minHeight: '100vh', background: t.bg, fontFamily: "'Jost', sans-serif", display: 'flex' }}>
+      {/* Grid Pattern */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 0, opacity: dark ? 0.05 : 0.03,
+        backgroundImage: 'linear-gradient(rgba(0,0,0,1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,1) 1px, transparent 1px)',
+        backgroundSize: '40px 40px', pointerEvents: 'none'
+      }}></div>
 
-        {/* Panneau gauche */}
-        <div className="left-panel" style={{
-          flex: 1, background: t.bg3, display: 'flex', flexDirection: 'column',
-          justifyContent: 'space-between', padding: '48px 56px',
-          borderRight: `1px solid ${t.brd}`, position: 'relative', overflow: 'hidden',
+      {/* Theme Toggle */}
+      <button
+        onClick={() => setDark(d => !d)}
+        style={{
+          position: 'absolute', top: 24, right: 24, zIndex: 10,
+          background: dark ? '#1A2826' : '#eef2f3', border: `1px solid ${t.brd}`, borderRadius: 24,
+          padding: '8px 16px', fontSize: 13, color: t.txt2, cursor: 'pointer',
+          fontWeight: 500, transition: 'all .3s ease',
+        }}
+      >
+        {dark ? '☀ Clair' : '🌙 Sombre'}
+      </button>
+
+      <div style={{
+        zIndex: 1, width: '100%', maxWidth: 440, padding: '20px',
+        opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'opacity .6s ease, transform .6s ease',
+        display: 'flex', flexDirection: 'column', alignItems: 'center'
+      }}>
+        
+        {/* Logo / Header */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px',
+          background: dark ? 'rgba(42, 211, 155, 0.1)' : 'rgba(42, 211, 155, 0.15)',
+          borderRadius: 20, marginBottom: 20, border: `1px solid ${dark ? 'rgba(42, 211, 155, 0.2)' : 'rgba(42, 211, 155, 0.3)'}`
         }}>
-          <div style={{ position: 'absolute', top: -100, right: -80, width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle,rgba(181,105,90,.12) 0%,transparent 65%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -60, left: -40, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle,rgba(181,105,90,.08) 0%,transparent 70%)', pointerEvents: 'none' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, zIndex: 1 }}>
-            <div style={{ width: 34, height: 34, background: t.acc, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🎂</div>
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: t.txt, fontWeight: 600 }}>SweetManager</span>
-          </div>
-
-          <div style={{ zIndex: 1 }}>
-            <div style={{ width: 32, height: 2, background: t.acc, marginBottom: 20 }} />
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 28, lineHeight: 1.5, color: t.txt, marginBottom: 16 }}>
-              Gérez votre pâtisserie<br />
-              avec <em style={{ color: t.acc, fontStyle: 'normal' }}>élégance</em>.
-            </p>
-            <p style={{ fontSize: 11, color: t.txt3, letterSpacing: '.14em', textTransform: 'uppercase' }}>Créez votre espace en 30 secondes</p>
-          </div>
-
-          <div style={{ display: 'flex', gap: 36, zIndex: 1 }}>
-            {[['Stock', 'Intelligent'], ['Commandes', 'Simplifiées'], ['Finances', 'Claires']].map(([n, l]) => (
-              <div key={l}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: t.acc, fontWeight: 600 }}>{n}</div>
-                <div style={{ fontSize: 10, color: t.txt3, letterSpacing: '.1em', textTransform: 'uppercase', marginTop: 3 }}>{l}</div>
-              </div>
-            ))}
-          </div>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2AD39B', boxShadow: `0 0 8px #2AD39B` }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: dark ? '#2AD39B' : '#0F5B5A', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            SweetManager Inscription
+          </span>
         </div>
 
-        {/* Panneau droit */}
-        <div className="right-panel" style={{
-          width: 400, flexShrink: 0, background: t.bg2,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '48px', position: 'relative',
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: t.txt, marginBottom: 32, letterSpacing: '-0.02em', transition: 'color .3s' }}>
+          Créez un compte
+        </h1>
+
+        {/* Card */}
+        <div style={{
+          width: '100%', background: t.card, padding: '40px', borderRadius: 24,
+          border: `1px solid ${t.brd}`,
+          boxShadow: dark ? '0 24px 48px rgba(0,0,0,0.4)' : '0 12px 32px rgba(15,91,90,0.06)',
+          transition: 'background .3s, border-color .3s, box-shadow .3s'
         }}>
-          <button onClick={() => setDark(d => !d)} style={{
-            position: 'absolute', top: 20, right: 20,
-            background: t.bg3, border: `1px solid ${t.brd}`, borderRadius: 20,
-            padding: '6px 14px', fontSize: 11, fontFamily: "'Jost', sans-serif",
-            color: t.txt2, cursor: 'pointer',
-          }}>
-            {dark ? '☀ Clair' : '🌙 Sombre'}
-          </button>
+          <form onSubmit={gererSoumission}>
+            {champ('nom', 'Nom complet', 'text', 'Jean Dupont')}
+            {champ('email', 'Adresse e-mail', 'email', 'nom@entreprise.com')}
+            {champ('motDePasse', 'Mot de passe', 'password', '••••••••')}
+            {champ('confirmation', 'Confirmer le mot de passe', 'password', '••••••••')}
 
-          <div style={{
-            width: '100%', maxWidth: 320,
-            opacity: mounted ? 1 : 0,
-            transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity .5s ease, transform .5s ease',
-          }}>
-            <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: '.16em', textTransform: 'uppercase', color: t.acc, marginBottom: 10 }}>
-              Nouveau compte
-            </p>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 600, color: t.txt, lineHeight: 1.1, marginBottom: 6 }}>
-              Bienvenue
-            </h1>
-            <p style={{ fontSize: 13, color: t.txt2, fontWeight: 300, marginBottom: 32 }}>
-              Créez votre espace de gestion
-            </p>
-
-            <form onSubmit={gererSoumission}>
-              {champ('nom', 'Nom complet', 'text', 'Marie Koné')}
-              {champ('email', 'Adresse e-mail', 'email', 'votre@email.com')}
-              {champ('motDePasse', 'Mot de passe', 'password', '••••••••')}
-              {champ('confirmation', 'Confirmer le mot de passe', 'password', '••••••••')}
-
-              {erreur && (
-                <div style={{
-                  background: 'rgba(180,60,50,.07)', border: '1px solid rgba(180,60,50,.2)',
-                  borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#c46060',
-                  marginBottom: 16, display: 'flex', gap: 8,
-                }}>
-                  <span>⚠</span><span>{erreur}</span>
-                </div>
-              )}
-
-              <button type="submit" disabled={chargement} style={{
-                width: '100%', background: t.acc, color: '#fff', border: 'none',
-                borderRadius: 8, padding: 14, fontSize: 11, fontFamily: "'Jost', sans-serif",
-                fontWeight: 500, letterSpacing: '.15em', textTransform: 'uppercase',
-                cursor: chargement ? 'default' : 'pointer', marginTop: 4,
-                opacity: chargement ? .5 : 1, transition: 'opacity .2s',
+            {erreur && (
+              <div style={{
+                background: dark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2',
+                border: `1px solid ${dark ? 'rgba(239, 68, 68, 0.3)' : '#f87171'}`,
+                borderRadius: 12, padding: '12px 16px', fontSize: 14, color: dark ? '#fca5a5' : '#b91c1c',
+                marginBottom: 20, display: 'flex', gap: 8, alignItems: 'center', fontWeight: 500
               }}>
-                {chargement
-                  ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />
-                      Création…
-                    </span>
-                  : 'Créer mon compte'
-                }
-              </button>
-            </form>
+                ⚠ <span>{erreur}</span>
+              </div>
+            )}
 
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${t.brd}`, textAlign: 'center' }}>
-              <span style={{ fontSize: 12, color: t.txt3 }}>Déjà un compte ? </span>
-              <a href="/connexion" style={{ fontSize: 12, color: t.acc, textDecoration: 'none', fontWeight: 500 }}>
-                Se connecter
-              </a>
-            </div>
+            <button
+              type="submit"
+              disabled={chargement || !form.email || !form.motDePasse || !form.nom || !form.confirmation}
+              style={{
+                width: '100%', background: t.btnBg, color: t.btnTxt, border: 'none', borderRadius: 12,
+                padding: '16px', fontSize: 15, fontWeight: 600, cursor: chargement ? 'default' : 'pointer', marginTop: 8,
+                opacity: (chargement || !form.email || !form.motDePasse || !form.nom || !form.confirmation) ? .6 : 1, transition: 'all .2s ease',
+              }}
+            >
+              {chargement ? 'Création…' : 'Créer mon compte'}
+            </button>
+          </form>
+
+          <div style={{ marginTop: 24, textAlign: 'center', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1, height: 1, background: t.brd }}></div>
+            <span style={{ fontSize: 12, color: t.txt2, fontWeight: 500, textTransform: 'uppercase' }}>Ou</span>
+            <div style={{ flex: 1, height: 1, background: t.brd }}></div>
+          </div>
+
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <span style={{ fontSize: 14, color: t.txt2 }}>Déjà un compte ? </span>
+            <Link to="/connexion" style={{ fontSize: 14, color: t.acc, textDecoration: 'none', fontWeight: 600 }}>
+              Se connecter
+            </Link>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

@@ -8,6 +8,11 @@ import Inscription from './pages/Inscription'
 const App = () => {
   return (
     <AuthProvider>
+      <div className="dark-glow-layer">
+        <div className="glow-1"></div>
+        <div className="glow-2"></div>
+        <div className="glow-3"></div>
+      </div>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/connexion" />} />
@@ -17,7 +22,7 @@ const App = () => {
               <TableauDeBord />
             </RouteProtegee>
           } />
-<Route path="/inscription" element={<Inscription />} />
+          <Route path="/inscription" element={<Inscription />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

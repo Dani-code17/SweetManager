@@ -2,6 +2,8 @@
 import express  from 'express'
 import cors     from 'cors'
 import dotenv   from 'dotenv'
+import path     from 'path'
+import { fileURLToPath } from 'url'
 
 import connexionRoutes  from './routes/connexionRoutes.js'
 import depensesRoutes   from './routes/depensesRoutes.js'
@@ -36,9 +38,18 @@ app.use('/api/pdf', pdfRoutes)
 // ── Route de santé ────────────────────────────────────────────────────────────
 app.get('/api/ping', (_, res) => res.json({ status: 'ok' }))
 
-// ── Gestion 404 ───────────────────────────────────────────────────────────────
-app.use((req, res) => {
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// ── Gestion 404 pour l'API ────────────────────────────────────────────────────
+app.use('/api', (req, res) => {
   res.status(404).json({ message: `Route ${req.method} ${req.path} introuvable` })
+})
+
+// ── Service du Frontend en Production ─────────────────────────────────────────
+app.use(express.static(path.join(__dirname, '../../frontend/dist')))
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'))
 })
 
 // ── Gestion erreurs globales ──────────────────────────────────────────────────

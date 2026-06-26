@@ -1,0 +1,10 @@
+{
+  "name": "sweetmanager-root",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "npm run install:all",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start"
+  }
+}

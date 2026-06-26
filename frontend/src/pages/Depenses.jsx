@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 
+// ──────────────────────────────────────────────────────────────────────────
+// Dépenses — harmonisée avec la palette Indigo Premium
+// Utilise les tokens Tailwind personnalisés (bg-primary, bg-surface-container,
+// text-on-surface-variant, border-outline-variant, etc.) pour être cohérent
+// avec le TableauDeBord.
+// ──────────────────────────────────────────────────────────────────────────
+
 const categoriesDisponibles = [
   'Matières premières', 'Emballages', 'Loyer', 'Électricité',
   'Transport', 'Salaires', 'Équipement', 'Autres'
@@ -57,63 +64,69 @@ const Depenses = () => {
 
   const totalDepenses = depenses.reduce((acc, d) => acc + Number(d.montant), 0)
 
+  // Classes Tailwind réutilisables (palette indigo via tokens M3)
+  const inputCls = 'w-full bg-transparent border border-outline-variant/40 rounded-lg px-4 py-2.5 mt-1 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors'
+  const labelCls = 'text-sm text-on-surface-variant font-medium'
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-surface-container-low p-6 transition-colors">
       <div className="max-w-4xl mx-auto">
 
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Dépenses</h1>
-            <p className="text-red-500 font-semibold mt-1">
+            <h1 className="font-headline-lg text-headline-lg text-on-surface">Dépenses</h1>
+            <p className="text-error font-semibold mt-1 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-error" />
               Total : {totalDepenses.toLocaleString()} FCFA
             </p>
           </div>
           <button
             onClick={() => setAfficherFormulaire(!afficherFormulaire)}
-            className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium"
+            className="satin-button text-white px-5 py-2.5 rounded-full font-medium flex items-center gap-2 active:scale-95 transition-transform"
           >
-            + Nouvelle dépense
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            Nouvelle dépense
           </button>
         </div>
 
-        {/* Formulaire */}
+        {/* ── Formulaire ─────────────────────────────────────────────────── */}
         {afficherFormulaire && (
-          <div className="bg-white rounded-xl shadow p-6 mb-6">
-            <h2 className="font-semibold text-gray-700 mb-4">Nouvelle dépense</h2>
+          <div className="glass-card rounded-2xl p-6 mb-6 stagger-in" style={{ animationDelay: '0s' }}>
+            <h2 className="font-headline-md text-headline-md text-on-surface mb-4">Nouvelle dépense</h2>
             <form onSubmit={gererSoumission} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-600">Montant (FCFA)</label>
+                <label className={labelCls}>Montant (FCFA)</label>
                 <input type="number" required value={formulaire.montant}
                   onChange={e => setFormulaire({ ...formulaire, montant: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                  className={inputCls} />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Catégorie</label>
+                <label className={labelCls}>Catégorie</label>
                 <select required value={formulaire.categorie}
                   onChange={e => setFormulaire({ ...formulaire, categorie: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                  className={inputCls}>
                   <option value="">Choisir...</option>
                   {categoriesDisponibles.map(c => <option key={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-600">Fournisseur</label>
+                <label className={labelCls}>Fournisseur</label>
                 <input type="text" value={formulaire.fournisseur}
                   onChange={e => setFormulaire({ ...formulaire, fournisseur: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                  className={inputCls} />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Date</label>
+                <label className={labelCls}>Date</label>
                 <input type="date" required value={formulaire.dateDepense}
                   onChange={e => setFormulaire({ ...formulaire, dateDepense: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                  className={inputCls} />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Mode de paiement</label>
+                <label className={labelCls}>Mode de paiement</label>
                 <select value={formulaire.modePaiement}
                   onChange={e => setFormulaire({ ...formulaire, modePaiement: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                  className={inputCls}>
                   <option value="cash">Cash</option>
                   <option value="orange_money">Orange Money</option>
                   <option value="wave">Wave</option>
@@ -122,18 +135,18 @@ const Depenses = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-600">Description</label>
+                <label className={labelCls}>Description</label>
                 <input type="text" value={formulaire.description}
                   onChange={e => setFormulaire({ ...formulaire, description: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                  className={inputCls} />
               </div>
-              <div className="sm:col-span-2 flex gap-3 justify-end">
+              <div className="sm:col-span-2 flex gap-3 justify-end mt-2">
                 <button type="button" onClick={() => setAfficherFormulaire(false)}
-                  className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
+                  className="px-5 py-2.5 border border-outline-variant rounded-full text-on-surface-variant font-medium hover:bg-surface-container transition-colors active:scale-95">
                   Annuler
                 </button>
                 <button type="submit" disabled={chargement}
-                  className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg disabled:opacity-50">
+                  className="satin-button px-5 py-2.5 text-white rounded-full font-medium disabled:opacity-50 active:scale-95 transition-transform">
                   {chargement ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
               </div>
@@ -141,33 +154,43 @@ const Depenses = () => {
           </div>
         )}
 
-        {/* Liste */}
-        <div className="bg-white rounded-xl shadow overflow-hidden">
+        {/* ── Liste ──────────────────────────────────────────────────────── */}
+        <div className="glass-card rounded-2xl overflow-hidden">
           {depenses.length === 0 ? (
-            <p className="text-gray-400 text-center py-10">Aucune dépense enregistrée.</p>
+            <p className="text-on-surface-variant text-center py-10 flex flex-col items-center gap-3">
+              <span className="material-symbols-outlined text-[40px] opacity-30">receipt_long</span>
+              Aucune dépense enregistrée.
+            </p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+              <thead className="bg-surface-container-low text-on-surface-variant uppercase text-xs">
                 <tr>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Catégorie</th>
-                  <th className="px-4 py-3 text-left">Fournisseur</th>
-                  <th className="px-4 py-3 text-right">Montant</th>
-                  <th className="px-4 py-3 text-center">Action</th>
+                  <th className="px-lg py-3 text-left font-label-sm tracking-widest">Date</th>
+                  <th className="px-lg py-3 text-left font-label-sm tracking-widest">Catégorie</th>
+                  <th className="px-lg py-3 text-left font-label-sm tracking-widest">Fournisseur</th>
+                  <th className="px-lg py-3 text-right font-label-sm tracking-widest">Montant</th>
+                  <th className="px-lg py-3 text-center font-label-sm tracking-widest">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-outline-variant/15">
                 {depenses.map(d => (
-                  <tr key={d.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">{new Date(d.dateDepense).toLocaleDateString('fr-FR')}</td>
-                    <td className="px-4 py-3">{d.categorie}</td>
-                    <td className="px-4 py-3 text-gray-500">{d.fournisseur || '—'}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-red-500">
+                  <tr key={d.id} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="px-lg py-4 text-on-surface-variant">{new Date(d.dateDepense).toLocaleDateString('fr-FR')}</td>
+                    <td className="px-lg py-4 text-on-surface">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tertiary/10 text-tertiary border border-tertiary/20">
+                        {d.categorie}
+                      </span>
+                    </td>
+                    <td className="px-lg py-4 text-on-surface-variant">{d.fournisseur || '—'}</td>
+                    <td className="px-lg py-4 text-right font-semibold text-error">
                       {Number(d.montant).toLocaleString()} FCFA
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <button onClick={() => supprimerDepense(d.id)}
-                        className="text-red-400 hover:text-red-600 text-xs">
+                    <td className="px-lg py-4 text-center">
+                      <button
+                        onClick={() => supprimerDepense(d.id)}
+                        className="text-on-surface-variant hover:text-error hover:bg-error-container/30 p-2 rounded-full transition-colors text-xs inline-flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
                         Supprimer
                       </button>
                     </td>
