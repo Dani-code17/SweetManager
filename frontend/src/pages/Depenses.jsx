@@ -13,6 +13,7 @@ const categoriesDisponibles = [
   'Matières premières', 'Emballages', 'Loyer', 'Électricité',
   'Transport', 'Salaires', 'Équipement', 'Autres'
 ]
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 const Depenses = () => {
   const { token } = useAuth()
@@ -28,7 +29,7 @@ const Depenses = () => {
 
   const chargerDepenses = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/depenses', { headers: entetes })
+      const res = await axios.get(`${BASE_URL}/api/depenses`, { headers: entetes })
       setDepenses(res.data.items ?? [])
     } catch (err) {
       console.error(err)
@@ -41,7 +42,7 @@ const Depenses = () => {
     e.preventDefault()
     setChargement(true)
     try {
-      await axios.post('http://localhost:5000/api/depenses', formulaire, { headers: entetes })
+      await axios.post(`${BASE_URL}/api/depenses`, formulaire, { headers: entetes })
       setFormulaire({ montant: '', categorie: '', fournisseur: '', description: '', dateDepense: '', modePaiement: 'cash' })
       setAfficherFormulaire(false)
       chargerDepenses()
@@ -55,7 +56,7 @@ const Depenses = () => {
   const supprimerDepense = async (id) => {
     if (!confirm('Supprimer cette dépense ?')) return
     try {
-      await axios.delete(`http://localhost:5000/api/depenses/${id}`, { headers: entetes })
+      await axios.delete(`${BASE_URL}/api/depenses/${id}`, { headers: entetes })
       chargerDepenses()
     } catch (err) {
       console.error(err)

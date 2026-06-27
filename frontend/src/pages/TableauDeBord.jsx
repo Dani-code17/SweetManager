@@ -283,10 +283,11 @@ export default function TableauDeBord() {
   const [stockFiltreCateg, setStockFiltreCateg] = useState('');
   const [quantitesModif, setQuantitesModif] = useState({}); // { [id]: newQty }
   const [produits, setProduits] = useState([])
+  const [produitEnEdition, setProduitEnEdition] = useState(null)
   const [produitForm, setProduitForm] = useState({
-  nom: '', categorie: '', prix: '', description: '',
-  ingredients: []
-})
+    nom: '', categorie: '', prix: '', description: '',
+    ingredients: []
+  })
   const [produitSaving, setProduitSaving] = useState(false)
 
   const [paramsForm, setParamsForm] = useState({
@@ -572,23 +573,53 @@ export default function TableauDeBord() {
     if (!produitForm.nom || !produitForm.prix) return;
     setProduitSaving(true);
     try {
-      await fetch(`${BASE_URL}/api/produits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-        body: JSON.stringify({
-          nom: produitForm.nom,
-          categorie: produitForm.categorie,
-          prix: parseFloat(produitForm.prix),
-          description: produitForm.description,
-          ingredients: produitForm.ingredients
-        })
-      });
+      if (produitEnEdition) {
+        // Modification
+        await fetch(`${BASE_URL}/api/produits/${produitEnEdition.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          body: JSON.stringify({
+            nom: produitForm.nom,
+            categorie: produitForm.categorie,
+            prix: parseFloat(produitForm.prix),
+            description: produitForm.description,
+            ingredients: produitForm.ingredients
+          })
+        });
+        showToast('Produit modifié', 'success');
+      } else {
+        // Création
+        await fetch(`${BASE_URL}/api/produits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          body: JSON.stringify({
+            nom: produitForm.nom,
+            categorie: produitForm.categorie,
+            prix: parseFloat(produitForm.prix),
+            description: produitForm.description,
+            ingredients: produitForm.ingredients
+          })
+        });
+        showToast('Produit sauvegardé', 'success');
+      }
       setProduitForm({ nom: '', categorie: '', prix: '', description: '', ingredients: [] });
+      setProduitEnEdition(null);
       setModal(null);
       chargerProduits();
-      showToast('Produit sauvegardé', 'success');
     } catch (e) { console.error(e); }
     finally { setProduitSaving(false); }
+  };
+
+  const ouvrirEditionProduit = (p) => {
+    setProduitEnEdition(p);
+    setProduitForm({
+      nom: p.nom ?? '',
+      categorie: p.categorie ?? '',
+      prix: p.prix ?? '',
+      description: p.description ?? '',
+      ingredients: (p.ingredients ?? []).map(i => ({ stockArticleId: i.stockArticleId, quantite: Number(i.quantite) }))
+    });
+    setModal('produit');
   };
 
   const supprimerProduit = (id) => {
@@ -797,7 +828,7 @@ export default function TableauDeBord() {
     }, 1);
 
     if (ratioMin <= 0.5) return { label: 'Stock critique', classe: 'bg-red-50 text-red-700' };
-    if (ratioMin <= 1) return { label: 'Stock faible', classe: 'bg-amber-50 text-amber-700' };
+    if (ratioMin < 1) return { label: 'Stock faible', classe: 'bg-amber-50 text-amber-700' };
     return { label: 'OK', classe: 'bg-green-50 text-green-700' };
   };
 
@@ -1249,7 +1280,7 @@ export default function TableauDeBord() {
                       </thead>
                       <tbody className="divide-y divide-outline-variant/10">
                         {stockAffiche.map(s => {
-                          const statut = s.quantite <= 0 || s.quantite < s.seuil / 2 ? 'critique' : s.quantite < s.seuil ? 'faible' : 'ok';
+                          const statut = s.quantite <= 0 || s.quantite <= s.seuil / 2 ? 'critique' : s.quantite <= s.seuil ? 'faible' : 'ok';
                           return (
                             <tr key={s.id} className="hover:bg-surface-container-lowest transition-colors group">
                               <td className="px-lg py-5 font-headline-md text-on-surface">{s.nom}</td>
@@ -1349,9 +1380,14 @@ export default function TableauDeBord() {
                             <h3 className="font-headline-md text-headline-md text-on-surface mb-1">{p.nom}</h3>
                             <p className="text-label-md text-on-surface-variant tracking-wide uppercase">{p.categorie ?? '—'}</p>
                           </div>
-                          <button onClick={() => supprimerProduit(p.id)} className="text-on-surface-variant opacity-0 group-hover:opacity-100 hover:text-error transition-all p-2 rounded-full hover:bg-error-container/30">
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                          </button>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onClick={() => ouvrirEditionProduit(p)} className="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-primary/10">
+                              <span className="material-symbols-outlined text-[18px]">edit</span>
+                            </button>
+                            <button onClick={() => supprimerProduit(p.id)} className="text-on-surface-variant hover:text-error transition-all p-2 rounded-full hover:bg-error-container/30">
+                              <span className="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                          </div>
                         </div>
                         <div className="text-[28px] font-display-lg text-primary mb-4">
                           {afficherMontant(Number(p.prix))}
@@ -1468,7 +1504,7 @@ export default function TableauDeBord() {
                                   <button onClick={() => { setCommandeAffichee(c); setModal('commande_detail'); }} className="p-2 rounded-full hover:bg-surface-container text-primary transition-colors">
                                     <span className="material-symbols-outlined text-[18px]">visibility</span>
                                   </button>
-                                  <button onClick={() => { window.open(`http://localhost:5000/api/pdf/commande/${c.id}?token=${localStorage.getItem('token')}`, '_blank') }} className="p-2 rounded-full hover:bg-surface-container text-tertiary transition-colors">
+                                  <button onClick={() => { window.open(`${BASE_URL}/api/pdf/commande/${c.id}?token=${localStorage.getItem('token')}`, '_blank') }} className="p-2 rounded-full hover:bg-surface-container text-tertiary transition-colors">
                                     <span className="material-symbols-outlined text-[18px]">receipt_long</span>
                                   </button>
                                   <button onClick={() => supprimerCommandeItem(c.id)} className="p-2 rounded-full hover:bg-error-container/30 text-error transition-colors">
@@ -1804,14 +1840,12 @@ export default function TableauDeBord() {
               <div className="space-y-2 max-h-32 overflow-y-auto border border-outline-variant/30 rounded-lg p-2">
                 {produits.map(p => {
                   const ligne = commandeForm.lignes?.find(l => l.produitId === p.id)
-                  const etatStock = evaluerStockProduit(p)
                   return (
                     <div key={p.id} className="flex items-center justify-between gap-2 p-2 bg-surface-container rounded-lg">
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-medium text-on-surface truncate">{p.nom}</div>
                         <div className="flex items-center gap-2 text-xs text-on-surface-variant mt-0.5">
                           <span>{afficherMontant(Number(p.prix))}</span>
-                          <span className={`px-2 py-0.5 rounded-full ${etatStock.classe}`}>{etatStock.label}</span>
                         </div>
                       </div>
                       <input 
@@ -1978,7 +2012,7 @@ export default function TableauDeBord() {
         </Modal>
       )}
       {modal === 'produit' && (
-        <Modal title="Nouveau produit" onClose={() => setModal(null)}>
+        <Modal title={produitEnEdition ? 'Modifier le produit' : 'Nouveau produit'} onClose={() => { setModal(null); setProduitEnEdition(null); setProduitForm({ nom: '', categorie: '', prix: '', description: '', ingredients: [] }); }}>
           <Field label="Nom du produit">
             <input 
               placeholder="Ex : Gâteau au chocolat" 
@@ -2056,7 +2090,7 @@ export default function TableauDeBord() {
               </div>
             )}
           </Field>
-          <ModalFooter onClose={() => setModal(null)} onSave={sauvegarderProduit} saving={produitSaving} />
+          <ModalFooter onClose={() => { setModal(null); setProduitEnEdition(null); setProduitForm({ nom: '', categorie: '', prix: '', description: '', ingredients: [] }); }} onSave={sauvegarderProduit} saving={produitSaving} />
         </Modal>
       )}
 
