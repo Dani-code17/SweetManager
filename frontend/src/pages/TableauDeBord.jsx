@@ -159,11 +159,11 @@ const EvolutionChart = ({ recData, depData, barAreaHeight = 96, showLabels = tru
             style={{ height: `${barAreaHeight}px` }}
           >
             <div
-              className="flex-1 rounded-t bg-blue-400 hover:bg-blue-500 transition-colors"
+              className="flex-1 rounded-t bg-primary hover:opacity-90 transition-opacity"
               style={{ height: `${Math.max(((recData[i] ?? 0) > 0 ? 2 : 0), Math.round(((recData[i] ?? 0) / mx) * barAreaHeight))}px` }}
             />
             <div
-              className="flex-1 rounded-t bg-blue-200 hover:bg-blue-300 transition-colors"
+              className="flex-1 rounded-t bg-error hover:opacity-90 transition-opacity"
               style={{ height: `${Math.max(((depData[i] ?? 0) > 0 ? 2 : 0), Math.round(((depData[i] ?? 0) / mx) * barAreaHeight))}px` }}
             />
           </div>
@@ -1478,6 +1478,7 @@ export default function TableauDeBord() {
                               <td className="px-lg py-5">
                                 <select
                                   value={statutsEffectifs[c.id] ?? c.statut}
+                                  disabled={(statutsEffectifs[c.id] ?? c.statut) === 'Livré'}
                                   onChange={async e => {
                                     const nouveauStatut = e.target.value
                                     const ancienStatut = statutsEffectifs[c.id] ?? c.statut
@@ -1495,7 +1496,11 @@ export default function TableauDeBord() {
                                       setStatuts(s => ({ ...s, [c.id]: ancienStatut }))
                                     }
                                   }}
-                                  className="bg-transparent border border-outline-variant/30 rounded-lg px-3 py-1.5 focus:ring-primary focus:border-primary text-on-surface font-medium text-sm">
+                                  className={`bg-transparent border border-outline-variant/30 rounded-lg px-3 py-1.5 focus:ring-primary focus:border-primary text-on-surface font-medium text-sm ${
+                                    (statutsEffectifs[c.id] ?? c.statut) === 'Livré'
+                                      ? 'opacity-60 cursor-not-allowed bg-primary/5 border-primary/20 text-primary'
+                                      : ''
+                                  }`}>
                                   {['En cours','Confirmé','Prêt','Livré','Annulé'].map(s => <option key={s}>{s}</option>)}
                                 </select>
                               </td>
