@@ -1711,9 +1711,9 @@ export default function TableauDeBord() {
                       <div className="flex flex-col gap-2">
                         <label className="font-label-md text-on-surface-variant uppercase tracking-wider">Devise</label>
                         <select value={paramsForm.devise} onChange={(e) => setParamsForm({ ...paramsForm, devise: e.target.value })} className="bg-transparent border border-outline-variant/30 rounded-lg px-4 py-3 text-on-surface focus:ring-primary focus:border-primary transition-colors">
-                          <option value="FCFA">FCFA</option>
-                          <option value="EUR">EUR</option>
-                          <option value="USD">USD</option>
+                          <option className="bg-surface text-on-surface dark:bg-[#121C1A]" value="FCFA">FCFA</option>
+                          <option className="bg-surface text-on-surface dark:bg-[#121C1A]" value="EUR">EUR</option>
+                          <option className="bg-surface text-on-surface dark:bg-[#121C1A]" value="USD">USD</option>
                         </select>
                       </div>
                       <div className="flex flex-col gap-2">
@@ -1950,12 +1950,12 @@ export default function TableauDeBord() {
                   value={stockForm.categorie}
                   onChange={(e) => setStockForm({ ...stockForm, categorie: e.target.value })}
                 >
-                  <option value="">Sélectionner...</option>
-                  <option>Farine & céréales</option>
-                  <option>Matières grasses</option>
-                  <option>Chocolat & cacao</option>
-                  <option>Emballages</option>
-                  <option>Autre</option>
+                  <option className="bg-surface text-on-surface dark:bg-[#121C1A]" value="">Sélectionner...</option>
+                  <option className="bg-surface text-on-surface dark:bg-[#121C1A]">Farine & céréales</option>
+                  <option className="bg-surface text-on-surface dark:bg-[#121C1A]">Matières grasses</option>
+                  <option className="bg-surface text-on-surface dark:bg-[#121C1A]">Chocolat & cacao</option>
+                  <option className="bg-surface text-on-surface dark:bg-[#121C1A]">Emballages</option>
+                  <option className="bg-surface text-on-surface dark:bg-[#121C1A]">Autre</option>
                 </select>
                 <button 
                   onClick={() => { setStockCatSaisie(true); setStockForm({ ...stockForm, categorie: '' }); }}
@@ -1996,10 +1996,10 @@ export default function TableauDeBord() {
                 value={stockForm.unite}
                 onChange={(e) => setStockForm({ ...stockForm, unite: e.target.value })}
               >
-                <option>kg</option>
-                <option>g</option>
-                <option>L</option>
-                <option>unités</option>
+                <option className="bg-surface text-on-surface dark:bg-[#121C1A]">kg</option>
+                <option className="bg-surface text-on-surface dark:bg-[#121C1A]">g</option>
+                <option className="bg-surface text-on-surface dark:bg-[#121C1A]">L</option>
+                <option className="bg-surface text-on-surface dark:bg-[#121C1A]">unités</option>
               </select>
             </Field>
           </div>
@@ -2054,13 +2054,13 @@ export default function TableauDeBord() {
           </Field>
           <Field label="Ingrédients nécessaires">
             {stock.items.map(s => (
-              <div key={s.id} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                <span className="text-xs text-gray-600 flex-1">{s.nom} ({s.unite})</span>
+              <div key={s.id} className="flex items-center gap-2 py-1.5 border-b border-outline-variant/30 last:border-0">
+                <span className="text-xs text-on-surface flex-1">{s.nom} ({s.unite})</span>
                 <input 
                   type="number" 
                   placeholder="0" 
                   min="0"
-                  className="w-16 text-xs px-2 py-1 border border-gray-200 rounded-md"
+                  className="w-16 text-xs px-2 py-1 border border-outline-variant/30 rounded-md bg-transparent text-on-surface focus:ring-primary focus:border-primary focus:outline-none transition-colors"
                   value={produitForm.ingredients.find(i => i.stockArticleId === s.id)?.quantite || ''}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
