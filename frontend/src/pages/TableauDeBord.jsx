@@ -673,7 +673,9 @@ export default function TableauDeBord() {
     if (!Array.isArray(items)) return [];
     const now = new Date();
     return items.filter(item => {
-      const d = new Date(item.date);
+      if (!item.date) return false;
+      const [y, m, day] = item.date.split('-').map(Number);
+      const d = new Date(y, m - 1, day);
       if (isNaN(d)) return false;
       if (statsPeriode === 'mois') {
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -698,19 +700,28 @@ export default function TableauDeBord() {
     let rec = [];
     let dep = [];
 
+    // Parse "YYYY-MM-DD" as LOCAL date (avoids UTC-to-local day shift bug)
+    const parseLocalDate = (dateStr) => {
+      if (!dateStr) return new Date();
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
+
     if (statsPeriode === 'mois') {
       const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       labels = Array.from({ length: days }, (_, i) => String(i + 1));
       rec = Array(days).fill(0);
       dep = Array(days).fill(0);
-      
+
       recettesFiltrees.forEach(r => {
-        const d = new Date(r.date);
-        rec[d.getDate() - 1] += Number(r.montant || 0);
+        const d = parseLocalDate(r.date);
+        const idx = d.getDate() - 1;
+        if (idx >= 0 && idx < days) rec[idx] += Number(r.montant || 0);
       });
       depensesFiltrees.forEach(d_ => {
-        const d = new Date(d_.date);
-        dep[d.getDate() - 1] += Number(d_.montant || 0);
+        const d = parseLocalDate(d_.date);
+        const idx = d.getDate() - 1;
+        if (idx >= 0 && idx < days) dep[idx] += Number(d_.montant || 0);
       });
     } else if (statsPeriode === 'trimestre') {
       const trim = Math.floor(now.getMonth() / 3);
@@ -720,12 +731,12 @@ export default function TableauDeBord() {
       dep = [0, 0, 0];
 
       recettesFiltrees.forEach(r => {
-        const d = new Date(r.date);
-        rec[d.getMonth() % 3] += Number(r.montant || 0);
+        const d = parseLocalDate(r.date);
+        rec[d.getMonth() - (trim * 3)] += Number(r.montant || 0);
       });
       depensesFiltrees.forEach(d_ => {
-        const d = new Date(d_.date);
-        dep[d.getMonth() % 3] += Number(d_.montant || 0);
+        const d = parseLocalDate(d_.date);
+        dep[d.getMonth() - (trim * 3)] += Number(d_.montant || 0);
       });
     } else {
       labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -733,11 +744,11 @@ export default function TableauDeBord() {
       dep = Array(12).fill(0);
 
       recettesFiltrees.forEach(r => {
-        const d = new Date(r.date);
+        const d = parseLocalDate(r.date);
         rec[d.getMonth()] += Number(r.montant || 0);
       });
       depensesFiltrees.forEach(d_ => {
-        const d = new Date(d_.date);
+        const d = parseLocalDate(d_.date);
         dep[d.getMonth()] += Number(d_.montant || 0);
       });
     }
