@@ -253,6 +253,7 @@ export default function TableauDeBord() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Mobile action menu
   const [commandeAffichee, setCommandeAffichee] = useState(null);
   const [statsPeriode, setStatsPeriode] = useState('mois');
+  const [recherche, setRecherche] = useState('');
 
   // ── Stock : formulaire nouvel article ───────────────────────────────────────
   const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
@@ -690,6 +691,12 @@ export default function TableauDeBord() {
   const totalRecFiltrees  = recettesFiltrees.reduce((a, i) => a + (Number(i.montant) || 0), 0);
   const totalDepFiltrees  = depensesFiltrees.reduce((a, i) => a + (Number(i.montant) || 0), 0);
 
+  const commandesRecherchees = (commandes.items ?? []).filter(c => {
+    if (!recherche.trim()) return true;
+    const term = recherche.toLowerCase();
+    return (c.client?.toLowerCase().includes(term) || c.commande?.toLowerCase().includes(term));
+  });
+
   // PDF export for stats
   const exporterStatsPDF = () => {
     const periode = statsPeriode === 'mois' ? 'Mois en cours' : statsPeriode === 'trimestre' ? 'Trimestre' : 'Année';
@@ -964,7 +971,13 @@ export default function TableauDeBord() {
             </button>
             <div className="hidden sm:flex items-center bg-surface-container px-4 py-1.5 rounded-full border border-outline-variant/20">
               <span className="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
-              <input className="bg-transparent border-none focus:ring-0 text-body-md font-body-md text-on-surface placeholder:text-outline-variant w-48 lg:w-64" placeholder="Rechercher une commande..." type="text"/>
+              <input className="bg-transparent border-none focus:ring-0 text-body-md font-body-md text-on-surface placeholder:text-outline-variant w-48 lg:w-64" placeholder="Rechercher une commande..." type="text"
+                value={recherche}
+                onChange={(e) => {
+                  setRecherche(e.target.value);
+                  if (e.target.value.trim() && page !== 'commandes') setPage('commandes');
+                }}
+              />
             </div>
           </div>
           <div className="flex items-center gap-sm">
@@ -1469,7 +1482,7 @@ export default function TableauDeBord() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant/10">
-                          {commandes.items.map(c => (
+                          {commandesRecherchees.map(c => (
                             <tr key={c.id} className="hover:bg-surface-container-lowest transition-colors group">
                               <td className="px-lg py-5 font-headline-md text-on-surface">{c.client}</td>
                               <td className="px-lg py-5 text-on-surface-variant font-body-md max-w-xs truncate" title={c.commande ?? c.description}>{c.commande ?? c.description}</td>
@@ -1531,7 +1544,7 @@ export default function TableauDeBord() {
                   </div>
                   <div className="grid grid-cols-7 gap-2 min-w-[300px]">
                     {Array.from({ length: 30 }, (_, i) => i + 1).map(d => {
-                      const cmdsJour = commandes.items.filter(c => {
+                      const cmdsJour = commandesRecherchees.filter(c => {
                         const date = new Date(c.date_livraison ?? c.date);
                         return date.getDate() === d;
                       });

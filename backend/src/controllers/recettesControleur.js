@@ -51,7 +51,7 @@ export const listerRecettes = async (req, res) => {
 
     const items = paiements.map(p => ({
       id:          p.id,
-      date:        p.datePaiement.toISOString().split('T')[0],
+      date:        p.commande.creeLe.toISOString().split('T')[0],
       client:      p.commande.client.nom,
       description: `Commande #${p.commandeId.slice(0, 8)}`,
       montant:     Number(p.montant),
