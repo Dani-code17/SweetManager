@@ -54,8 +54,8 @@ export function useDashboard() {
     setError(null)
     try {
       const [depenses, recettes, stock, commandes, recHist, depHist] = await Promise.all([
-        fetchJSON(`${BASE_URL}/api/depenses?periode=mois`, defaultState.depenses),
-        fetchJSON(`${BASE_URL}/api/recettes?periode=mois`, defaultState.recettes),
+        fetchJSON(`${BASE_URL}/api/depenses?periode=all`, defaultState.depenses),
+        fetchJSON(`${BASE_URL}/api/recettes?periode=all`, defaultState.recettes),
         fetchJSON(`${BASE_URL}/api/stock`,                 defaultState.stock),
         fetchJSON(`${BASE_URL}/api/commandes`,             defaultState.commandes),
         fetchJSON(`${BASE_URL}/api/recettes/historique`,   [0,0,0,0,0,0]),

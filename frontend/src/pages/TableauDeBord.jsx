@@ -1016,7 +1016,7 @@ export default function TableauDeBord() {
                     </div>
                   </div>
                   <h3 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Chiffre d'Affaires</h3>
-                  <p className="font-display-lg text-[32px] text-primary leading-tight">{afficherMontant(recettes.total)}</p>
+                  <p className="font-display-lg text-[32px] text-primary leading-tight">{afficherMontant(totalRecFiltrees)}</p>
                 </div>
 
                 {/* Daily Orders KPI */}
@@ -1050,7 +1050,7 @@ export default function TableauDeBord() {
                     </div>
                   </div>
                   <h3 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Dépenses Mensuelles</h3>
-                  <p className="font-display-lg text-[32px] text-tertiary leading-tight">{afficherMontant(depenses.total)}</p>
+                  <p className="font-display-lg text-[32px] text-tertiary leading-tight">{afficherMontant(totalDepFiltrees)}</p>
                 </div>
               </div>
 
@@ -1064,7 +1064,7 @@ export default function TableauDeBord() {
                     </div>
                   </div>
                   <div className="w-full flex justify-center">
-                    <MiniChart recData={recettes.total ? [recettes.total, 0,0,0,0,0] : [0,0,0,0,0,0]} depData={depenses.total ? [depenses.total, 0,0,0,0,0] : [0,0,0,0,0,0]} onClick={() => navTo('stats')} />
+                    <MiniChart recData={recHist} depData={depHist} onClick={() => navTo('stats')} />
                   </div>
                 </div>
               </section>
@@ -1144,7 +1144,7 @@ export default function TableauDeBord() {
                   </div>
                   <div>
                     <p className="text-on-surface-variant font-label-md mb-1">Total Recettes</p>
-                    <h3 className="font-headline-lg text-headline-lg text-on-surface">{afficherMontant(recettes.total)}</h3>
+                    <h3 className="font-headline-lg text-headline-lg text-on-surface">{afficherMontant(totalRecFiltrees)}</h3>
                   </div>
                 </div>
 
@@ -1158,7 +1158,7 @@ export default function TableauDeBord() {
                   </div>
                   <div>
                     <p className="text-on-surface-variant font-label-md mb-1">Total Dépenses</p>
-                    <h3 className="font-headline-lg text-headline-lg text-on-surface">{afficherMontant(depenses.total)}</h3>
+                    <h3 className="font-headline-lg text-headline-lg text-on-surface">{afficherMontant(totalDepFiltrees)}</h3>
                   </div>
                 </div>
 
@@ -1173,7 +1173,7 @@ export default function TableauDeBord() {
                   </div>
                   <div>
                     <p className="text-on-surface-variant font-label-md mb-1">Solde Net</p>
-                    <h3 className="font-headline-lg text-headline-lg text-primary font-bold">{afficherMontant(soldeNet)}</h3>
+                    <h3 className="font-headline-lg text-headline-lg text-primary font-bold">{afficherMontant(totalRecFiltrees - totalDepFiltrees)}</h3>
                   </div>
                 </div>
               </div>

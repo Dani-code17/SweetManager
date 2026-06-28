@@ -19,6 +19,9 @@ function bornesMois(periodeParam) {
     const fin   = new Date(now.getFullYear(), 11, 31, 23, 59, 59)
     return { debut, fin }
   }
+  if (periodeParam === 'all') {
+    return { debut: undefined, fin: undefined }
+  }
   // défaut : mois courant
   const debut = new Date(now.getFullYear(), now.getMonth(), 1)
   const fin   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
@@ -33,7 +36,7 @@ export const listerRecettes = async (req, res) => {
   try {
     const paiements = await prisma.paiement.findMany({
       where: {
-        datePaiement: { gte: debut, lte: fin },
+        ...(debut && fin ? { datePaiement: { gte: debut, lte: fin } } : {}),
         commande: {
           utilisateurId: req.utilisateurId
         }
