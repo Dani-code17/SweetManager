@@ -148,11 +148,12 @@ const TableSkeleton = ({ rows = 3, cols = 5 }) => (
 );
 
 // Graphique barres côte à côte (recettes / dépenses par mois)
-const EvolutionChart = ({ recData, depData, barAreaHeight = 96, showLabels = true, className = '', onClick }) => {
+const EvolutionChart = ({ recData, depData, labels = MOIS_LABELS, barAreaHeight = 96, showLabels = true, className = '', onClick }) => {
   const mx = Math.max(...recData, ...depData, 1);
+  const gapClass = labels.length > 12 ? 'gap-[2px]' : 'gap-1.5';
   return (
-    <div className={`flex items-end gap-1.5 ${className}`} onClick={onClick}>
-      {MOIS_LABELS.map((m, i) => (
+    <div className={`flex items-end ${gapClass} ${className}`} onClick={onClick}>
+      {labels.map((m, i) => (
         <div key={m} className="flex-1 flex flex-col items-center min-w-0">
           <div
             className="w-full flex items-end justify-center gap-0.5"
@@ -167,7 +168,7 @@ const EvolutionChart = ({ recData, depData, barAreaHeight = 96, showLabels = tru
               style={{ height: `${Math.max(((depData[i] ?? 0) > 0 ? 2 : 0), Math.round(((depData[i] ?? 0) / mx) * barAreaHeight))}px` }}
             />
           </div>
-          {showLabels && <span className="text-xs text-gray-400 mt-1">{m}</span>}
+          {showLabels && <span className={`text-gray-400 mt-1 ${labels.length > 12 ? 'text-[8px] sm:text-[10px]' : 'text-xs'}`}>{m}</span>}
         </div>
       ))}
     </div>
@@ -690,6 +691,59 @@ export default function TableauDeBord() {
   const depensesFiltrees  = filtrerParPeriode(depenses.items ?? []);
   const totalRecFiltrees  = recettesFiltrees.reduce((a, i) => a + (Number(i.montant) || 0), 0);
   const totalDepFiltrees  = depensesFiltrees.reduce((a, i) => a + (Number(i.montant) || 0), 0);
+
+  const genererStatsChart = () => {
+    const now = new Date();
+    let labels = [];
+    let rec = [];
+    let dep = [];
+
+    if (statsPeriode === 'mois') {
+      const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      labels = Array.from({ length: days }, (_, i) => String(i + 1));
+      rec = Array(days).fill(0);
+      dep = Array(days).fill(0);
+      
+      recettesFiltrees.forEach(r => {
+        const d = new Date(r.date);
+        rec[d.getDate() - 1] += Number(r.montant || 0);
+      });
+      depensesFiltrees.forEach(d_ => {
+        const d = new Date(d_.date);
+        dep[d.getDate() - 1] += Number(d_.montant || 0);
+      });
+    } else if (statsPeriode === 'trimestre') {
+      const trim = Math.floor(now.getMonth() / 3);
+      const allMonths = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+      labels = [allMonths[trim * 3], allMonths[trim * 3 + 1], allMonths[trim * 3 + 2]];
+      rec = [0, 0, 0];
+      dep = [0, 0, 0];
+
+      recettesFiltrees.forEach(r => {
+        const d = new Date(r.date);
+        rec[d.getMonth() % 3] += Number(r.montant || 0);
+      });
+      depensesFiltrees.forEach(d_ => {
+        const d = new Date(d_.date);
+        dep[d.getMonth() % 3] += Number(d_.montant || 0);
+      });
+    } else {
+      labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+      rec = Array(12).fill(0);
+      dep = Array(12).fill(0);
+
+      recettesFiltrees.forEach(r => {
+        const d = new Date(r.date);
+        rec[d.getMonth()] += Number(r.montant || 0);
+      });
+      depensesFiltrees.forEach(d_ => {
+        const d = new Date(d_.date);
+        dep[d.getMonth()] += Number(d_.montant || 0);
+      });
+    }
+    return { labels, recData: rec, depData: dep };
+  };
+  const statsChart = genererStatsChart();
 
   const commandesRecherchees = (commandes.items ?? []).filter(c => {
     if (!recherche.trim()) return true;
@@ -1630,10 +1684,10 @@ export default function TableauDeBord() {
               <div className="glass-card rounded-2xl p-lg" style={{ animationDelay: '0.3s' }}>
                 <div className="font-headline-md text-on-surface mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">bar_chart</span>
-                  Évolution mensuelle (6 derniers mois)
+                  Évolution de la période ({statsPeriode === 'mois' ? 'Jours du mois' : statsPeriode === 'trimestre' ? 'Mois du trimestre' : 'Mois de l\'année'})
                 </div>
                 <div className="w-full h-72">
-                  <EvolutionChart recData={recHist} depData={depHist} barAreaHeight={220} />
+                  <EvolutionChart recData={statsChart.recData} depData={statsChart.depData} labels={statsChart.labels} barAreaHeight={220} />
                 </div>
                 <div className="flex gap-6 mt-6 justify-center">
                   <span className="flex items-center gap-2 font-label-md text-on-surface-variant"><span className="w-3 h-3 bg-primary rounded-full inline-block" /> Recettes</span>
