@@ -215,6 +215,141 @@ const telechargerCsv = (nomFichier, enTetes, lignes) => {
   URL.revokeObjectURL(url);
 };
 
+const echapperXml = (valeur) => {
+  if (valeur === null || valeur === undefined) return '';
+  return String(valeur)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+};
+
+const formaterDateExcel = (valeur) => {
+  if (!valeur) return '';
+  const [annee, mois, jour] = String(valeur).split('-');
+  if (annee && mois && jour) return `${jour}/${mois}/${annee}`;
+  return valeur;
+};
+
+const nomFichierPatisserie = (nomUtilisateur) => {
+  const nom = String(nomUtilisateur || 'utilisateur')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return `${nom || 'utilisateur'}-patisserie.xls`;
+};
+
+const celluleExcel = (valeur, options = {}) => {
+  const { style, type, mergeAcross } = options;
+  const nombre = Number(valeur);
+  const typeCellule = type ?? (valeur !== '' && valeur !== null && valeur !== undefined && Number.isFinite(nombre) ? 'Number' : 'String');
+  const contenu = typeCellule === 'Number' ? nombre : echapperXml(valeur);
+  return `<Cell${style ? ` ss:StyleID="${style}"` : ''}${mergeAcross ? ` ss:MergeAcross="${mergeAcross}"` : ''}><Data ss:Type="${typeCellule}">${contenu}</Data></Cell>`;
+};
+
+const ligneExcel = (cellules, options = {}) => `<Row${options.height ? ` ss:Height="${options.height}"` : ''}>${cellules.join('')}</Row>`;
+
+const feuilleExcel = (nom, lignes, colonnes = []) => `
+  <Worksheet ss:Name="${echapperXml(nom)}">
+    <Table>
+      ${colonnes.map(largeur => `<Column ss:Width="${largeur}"/>`).join('\n')}
+      ${lignes.join('\n')}
+    </Table>
+  </Worksheet>`;
+
+const telechargerClasseurExcel = (nomFichier, feuilles) => {
+  const contenu = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="titre">
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Font ss:Bold="1" ss:Size="15" ss:Color="#FFFFFF"/>
+      <Interior ss:Color="#0F5B5A" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="sousTitre">
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Font ss:Bold="1" ss:Size="10" ss:Color="#0F5B5A"/>
+      <Interior ss:Color="#E7F8F2" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="entete">
+      <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+      <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+      <Interior ss:Color="#138A7E" ss:Pattern="Solid"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0F5B5A"/>
+        <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0F5B5A"/>
+        <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0F5B5A"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="texte">
+      <Alignment ss:Vertical="Center"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9EDE8"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="texteAlt">
+      <Alignment ss:Vertical="Center"/>
+      <Interior ss:Color="#F6FBF9" ss:Pattern="Solid"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9EDE8"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="nombre">
+      <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+      <NumberFormat ss:Format="#,##0"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9EDE8"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="nombreAlt">
+      <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+      <NumberFormat ss:Format="#,##0"/>
+      <Interior ss:Color="#F6FBF9" ss:Pattern="Solid"/>
+      <Borders>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9EDE8"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="total">
+      <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+      <Font ss:Bold="1" ss:Color="#0F5B5A"/>
+      <NumberFormat ss:Format="#,##0"/>
+      <Interior ss:Color="#D7F4EA" ss:Pattern="Solid"/>
+      <Borders>
+        <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F5B5A"/>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0F5B5A"/>
+      </Borders>
+    </Style>
+    <Style ss:ID="labelTotal">
+      <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+      <Font ss:Bold="1" ss:Color="#0F5B5A"/>
+      <Interior ss:Color="#D7F4EA" ss:Pattern="Solid"/>
+      <Borders>
+        <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#0F5B5A"/>
+        <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0F5B5A"/>
+      </Borders>
+    </Style>
+  </Styles>
+  ${feuilles.map(({ nom, lignes, colonnes }) => feuilleExcel(nom, lignes, colonnes)).join('\n')}
+</Workbook>`;
+  const blob = new Blob([contenu], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const lien = document.createElement('a');
+  lien.href = url;
+  lien.download = nomFichier;
+  document.body.appendChild(lien);
+  lien.click();
+  document.body.removeChild(lien);
+  URL.revokeObjectURL(url);
+};
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 export default function TableauDeBord() {
   const navigate              = useNavigate();
@@ -886,6 +1021,63 @@ export default function TableauDeBord() {
     );
   };
 
+  const exporterExcelCliente = () => {
+    const lignesCommandes = commandes.items.map((c, index) => {
+      const texteStyle = index % 2 === 0 ? 'texte' : 'texteAlt';
+      const nombreStyle = index % 2 === 0 ? 'nombre' : 'nombreAlt';
+      return [
+        celluleExcel(c.client ?? '', { style: texteStyle }),
+        celluleExcel(c.commande ?? c.description ?? c.notes ?? '', { style: texteStyle }),
+        celluleExcel(Number(c.montant) || 0, { style: nombreStyle }),
+        celluleExcel(formaterDateExcel(c.date_livraison ?? c.date), { type: 'String', style: texteStyle }),
+        celluleExcel(Number(c.entrees) || 0, { style: nombreStyle }),
+      ];
+    });
+
+    const totalCommandes = commandes.items.reduce((total, c) => total + (Number(c.montant) || 0), 0);
+    const totalEntrees = commandes.items.reduce((total, c) => total + (Number(c.entrees) || 0), 0);
+
+    const lignesDepenses = depenses.items.map((d, index) => {
+      const texteStyle = index % 2 === 0 ? 'texte' : 'texteAlt';
+      const nombreStyle = index % 2 === 0 ? 'nombre' : 'nombreAlt';
+      return [
+        celluleExcel(formaterDateExcel(d.date), { type: 'String', style: texteStyle }),
+        celluleExcel('', { style: texteStyle }),
+        celluleExcel('', { style: texteStyle }),
+        celluleExcel(d.description || d.categorie || '', { style: texteStyle }),
+        celluleExcel('', { style: nombreStyle }),
+        celluleExcel(Number(d.montant) || 0, { style: nombreStyle }),
+      ];
+    });
+
+    const totalDepenses = depenses.items.reduce((total, d) => total + (Number(d.montant) || 0), 0);
+
+    telechargerClasseurExcel(nomFichierPatisserie(utilisateur?.nom), [
+      {
+        nom: 'Feuil1',
+        colonnes: [155, 210, 90, 130, 90],
+        lignes: [
+          ligneExcel([celluleExcel('COMMANDES GATEAUX', { style: 'titre', mergeAcross: 4 })], { height: 28 }),
+          ligneExcel([celluleExcel('Export SweetManager - suivi client, prix, livraisons et entrees', { style: 'sousTitre', mergeAcross: 4 })], { height: 22 }),
+          ligneExcel(['Nom du client', 'Libelle', 'Prix', 'Date de livraison', 'Entrees'].map(t => celluleExcel(t, { style: 'entete' })), { height: 24 }),
+          ...lignesCommandes.map(ligne => ligneExcel(ligne, { height: 22 })),
+          ligneExcel([celluleExcel('', { style: 'labelTotal' }), celluleExcel('TOTAL', { style: 'labelTotal' }), celluleExcel(totalCommandes, { style: 'total' }), celluleExcel('', { style: 'labelTotal' }), celluleExcel(totalEntrees, { style: 'total' })], { height: 24 }),
+        ],
+      },
+      {
+        nom: 'Feuil2',
+        colonnes: [110, 60, 60, 210, 85, 105],
+        lignes: [
+          ligneExcel([celluleExcel('DEPENSES', { style: 'titre', mergeAcross: 5 })], { height: 28 }),
+          ligneExcel([celluleExcel('Export SweetManager - historique des achats et charges', { style: 'sousTitre', mergeAcross: 5 })], { height: 22 }),
+          ligneExcel([celluleExcel('Dates', { style: 'entete' }), celluleExcel('', { style: 'entete' }), celluleExcel('', { style: 'entete' }), celluleExcel('Libelle', { style: 'entete' }), celluleExcel('Quantite', { style: 'entete' }), celluleExcel('Montant', { style: 'entete' })], { height: 24 }),
+          ...lignesDepenses.map(ligne => ligneExcel(ligne, { height: 22 })),
+          ligneExcel([celluleExcel('', { style: 'labelTotal' }), celluleExcel('', { style: 'labelTotal' }), celluleExcel('', { style: 'labelTotal' }), celluleExcel('TOTAL', { style: 'labelTotal' }), celluleExcel('', { style: 'labelTotal' }), celluleExcel(totalDepenses, { style: 'total' })], { height: 24 }),
+        ],
+      },
+    ]);
+  };
+
   const evaluerStockProduit = (produit) => {
     const ingredients = produit.ingredients ?? [];
     if (ingredients.length === 0) {
@@ -1202,9 +1394,9 @@ export default function TableauDeBord() {
                     <span className="material-symbols-outlined">add</span>
                     <span>Nouvelle Dépense</span>
                   </button>
-                  <button onClick={exporterCsvFinances} className="flex items-center gap-2 px-6 py-3 border border-outline-variant rounded-full text-on-surface-variant font-medium active:scale-95 transition-transform hover:bg-surface-container">
+                  <button onClick={exporterExcelCliente} className="flex items-center gap-2 px-6 py-3 border border-outline-variant rounded-full text-on-surface-variant font-medium active:scale-95 transition-transform hover:bg-surface-container">
                     <span className="material-symbols-outlined">download</span>
-                    <span>Exporter CSV</span>
+                    <span>Exporter Excel</span>
                   </button>
                 </div>
               </div>
@@ -1513,9 +1705,9 @@ export default function TableauDeBord() {
                       Calendrier
                     </button>
                   </div>
-                  <button onClick={exporterCsvCommandes} className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant rounded-full text-on-surface-variant font-medium active:scale-95 transition-transform hover:bg-surface-container">
+                  <button onClick={exporterExcelCliente} className="flex items-center gap-2 px-6 py-2.5 border border-outline-variant rounded-full text-on-surface-variant font-medium active:scale-95 transition-transform hover:bg-surface-container">
                     <span className="material-symbols-outlined">download</span>
-                    <span className="hidden sm:inline">CSV</span>
+                    <span className="hidden sm:inline">Excel</span>
                   </button>
                   <button onClick={() => setModal('commande')} className="satin-button flex items-center gap-2 px-6 py-2.5 rounded-full text-white font-medium active:scale-95 transition-transform shadow-lg shadow-primary/20 hover:scale-[1.02]">
                     <span className="material-symbols-outlined">add</span>

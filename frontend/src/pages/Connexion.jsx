@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+
 const Connexion = () => {
   const [email, setEmail] = useState('')
   const [motDePasse, setMotDePasse] = useState('')
@@ -21,7 +23,7 @@ const Connexion = () => {
     setChargement(true)
     setErreur('')
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/connecter`, { email, motDePasse })
+      const res = await axios.post(`${BASE_URL}/api/auth/connecter`, { email, motDePasse })
       connecter(res.data.utilisateur, res.data.token)
       navigate('/tableau-de-bord')
     } catch (err) {

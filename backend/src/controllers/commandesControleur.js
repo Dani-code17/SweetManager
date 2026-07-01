@@ -26,7 +26,8 @@ export const listerCommandes = async (req, res) => {
       where: { utilisateurId: req.utilisateurId },
       include: {
         client: true,
-        lignesCommande: { include: { produit: true } }
+        lignesCommande: { include: { produit: true } },
+        paiements: true
       },
       orderBy: { dateLivraison: 'asc' }
     })
@@ -39,6 +40,7 @@ export const listerCommandes = async (req, res) => {
       date:          c.dateLivraison?.toISOString().split('T')[0] ?? null,
       date_livraison:c.dateLivraison?.toISOString().split('T')[0] ?? null,
       montant:       Number(c.montantTotal),
+      entrees:       c.paiements.reduce((total, paiement) => total + Number(paiement.montant), 0),
       statut:        STATUT_FR[c.statut] ?? c.statut,
       notes:         c.notes,
     }))

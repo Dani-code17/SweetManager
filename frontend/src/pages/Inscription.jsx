@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+
 const Inscription = () => {
   const [form, setForm] = useState({ nom: '', email: '', motDePasse: '', confirmation: '' })
   const [erreur, setErreur] = useState('')
@@ -56,7 +58,7 @@ const Inscription = () => {
     }
     setChargement(true)
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/inscrire`, {
+      await axios.post(`${BASE_URL}/api/auth/inscrire`, {
         nom: form.nom,
         email: form.email,
         motDePasse: form.motDePasse
