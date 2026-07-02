@@ -42,12 +42,14 @@ export const listerDepenses = async (req, res) => {
 
     const total = depenses.reduce((acc, d) => acc + Number(d.montant), 0)
     const items = depenses.map(d => ({
-      id:          d.id,
-      date:        d.dateDepense.toISOString().split('T')[0],
-      categorie:   d.categorie,
-      description: d.description ?? '',
-      fournisseur: d.fournisseur ?? '',
-      montant:     Number(d.montant),
+      id:           d.id,
+      date:         d.dateDepense.toISOString().split('T')[0],
+      categorie:    d.categorie,
+      libelle:      d.libelle ?? '',
+      description:  d.description ?? '',
+      fournisseur:  d.fournisseur ?? '',
+      montant:      Number(d.montant),
+      quantite:     d.quantite !== null ? Number(d.quantite) : null,
       modePaiement: d.modePaiement ?? '',
     }))
 
@@ -58,7 +60,7 @@ export const listerDepenses = async (req, res) => {
 }
 // POST /api/depenses
 export const creerDepense = async (req, res) => {
-  const { montant, categorie, fournisseur, description, dateDepense, modePaiement } = req.body
+  const { montant, categorie, fournisseur, description, dateDepense, modePaiement, quantite, libelle } = req.body
   
   // Validation
   if (!montant || !categorie || !dateDepense) {
@@ -73,6 +75,8 @@ export const creerDepense = async (req, res) => {
       data: {
         utilisateurId: req.utilisateurId,
         montant: parseFloat(montant),
+        quantite: quantite ? parseFloat(quantite) : null,
+        libelle: libelle || null,
         categorie,
         fournisseur: fournisseur || null,
         description: description || null,
@@ -89,11 +93,20 @@ export const creerDepense = async (req, res) => {
 // PUT /api/depenses/:id
 export const modifierDepense = async (req, res) => {
   const { id } = req.params
-  const { montant, categorie, fournisseur, description, dateDepense, modePaiement } = req.body
+  const { montant, categorie, fournisseur, description, dateDepense, modePaiement, quantite, libelle } = req.body
   try {
     await prisma.depense.updateMany({
       where: { id, utilisateurId: req.utilisateurId },
-      data: { montant, categorie, fournisseur, description, dateDepense: new Date(dateDepense), modePaiement }
+      data: {
+        montant: montant ? parseFloat(montant) : undefined,
+        quantite: quantite !== undefined ? (quantite ? parseFloat(quantite) : null) : undefined,
+        libelle: libelle !== undefined ? (libelle || null) : undefined,
+        categorie,
+        fournisseur: fournisseur || null,
+        description: description || null,
+        dateDepense: new Date(dateDepense),
+        modePaiement: modePaiement || null
+      }
     })
     res.json({ message: 'Dépense mise à jour' })
   } catch (err) {

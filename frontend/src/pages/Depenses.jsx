@@ -22,7 +22,8 @@ const Depenses = () => {
   const [chargement, setChargement] = useState(false)
   const [formulaire, setFormulaire] = useState({
     montant: '', categorie: '', fournisseur: '',
-    description: '', dateDepense: '', modePaiement: 'cash'
+    description: '', dateDepense: '', modePaiement: 'cash',
+    quantite: '', libelle: ''
   })
 
   const entetes = { Authorization: `Bearer ${token}` }
@@ -43,7 +44,7 @@ const Depenses = () => {
     setChargement(true)
     try {
       await axios.post(`${BASE_URL}/api/depenses`, formulaire, { headers: entetes })
-      setFormulaire({ montant: '', categorie: '', fournisseur: '', description: '', dateDepense: '', modePaiement: 'cash' })
+      setFormulaire({ montant: '', categorie: '', fournisseur: '', description: '', dateDepense: '', modePaiement: 'cash', quantite: '', libelle: '' })
       setAfficherFormulaire(false)
       chargerDepenses()
     } catch (err) {
@@ -96,10 +97,26 @@ const Depenses = () => {
           <div className="glass-card rounded-2xl p-6 mb-6 stagger-in" style={{ animationDelay: '0s' }}>
             <h2 className="font-headline-md text-headline-md text-on-surface mb-4">Nouvelle dépense</h2>
             <form onSubmit={gererSoumission} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Libellé */}
+              <div className="sm:col-span-2">
+                <label className={labelCls}>Libellé <span className="text-on-surface-variant/50 text-xs">(optionnel)</span></label>
+                <input type="text" maxLength={200} value={formulaire.libelle}
+                  onChange={e => setFormulaire({ ...formulaire, libelle: e.target.value })}
+                  placeholder="Ex : Achat farine, Facture électricité…"
+                  className={inputCls} />
+              </div>
+              {/* Montant + Quantité */}
               <div>
                 <label className={labelCls}>Montant (FCFA)</label>
-                <input type="number" required value={formulaire.montant}
+                <input type="number" required min="0" step="0.01" value={formulaire.montant}
                   onChange={e => setFormulaire({ ...formulaire, montant: e.target.value })}
+                  className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Quantité <span className="text-on-surface-variant/50 text-xs">(optionnel)</span></label>
+                <input type="number" min="0" step="0.001" value={formulaire.quantite}
+                  onChange={e => setFormulaire({ ...formulaire, quantite: e.target.value })}
+                  placeholder="Ex : 5, 2.5…"
                   className={inputCls} />
               </div>
               <div>
@@ -167,8 +184,9 @@ const Depenses = () => {
               <thead className="bg-surface-container-low text-on-surface-variant uppercase text-xs">
                 <tr>
                   <th className="px-lg py-3 text-left font-label-sm tracking-widest">Date</th>
-                  <th className="px-lg py-3 text-left font-label-sm tracking-widest">Catégorie</th>
+                  <th className="px-lg py-3 text-left font-label-sm tracking-widest">Libellé / Catégorie</th>
                   <th className="px-lg py-3 text-left font-label-sm tracking-widest">Fournisseur</th>
+                  <th className="px-lg py-3 text-right font-label-sm tracking-widest">Qté</th>
                   <th className="px-lg py-3 text-right font-label-sm tracking-widest">Montant</th>
                   <th className="px-lg py-3 text-center font-label-sm tracking-widest">Action</th>
                 </tr>
@@ -176,14 +194,20 @@ const Depenses = () => {
               <tbody className="divide-y divide-outline-variant/15">
                 {depenses.map(d => (
                   <tr key={d.id} className="hover:bg-surface-container-lowest transition-colors">
-                    <td className="px-lg py-4 text-on-surface-variant">{new Date(d.dateDepense).toLocaleDateString('fr-FR')}</td>
+                    <td className="px-lg py-4 text-on-surface-variant whitespace-nowrap">{new Date(d.dateDepense ?? d.date).toLocaleDateString('fr-FR')}</td>
                     <td className="px-lg py-4 text-on-surface">
+                      {d.libelle && (
+                        <p className="font-medium text-on-surface text-sm mb-0.5">{d.libelle}</p>
+                      )}
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tertiary/10 text-tertiary border border-tertiary/20">
                         {d.categorie}
                       </span>
                     </td>
                     <td className="px-lg py-4 text-on-surface-variant">{d.fournisseur || '—'}</td>
-                    <td className="px-lg py-4 text-right font-semibold text-error">
+                    <td className="px-lg py-4 text-right text-on-surface-variant text-sm">
+                      {d.quantite !== null && d.quantite !== undefined ? Number(d.quantite).toLocaleString() : '—'}
+                    </td>
+                    <td className="px-lg py-4 text-right font-semibold text-error whitespace-nowrap">
                       {Number(d.montant).toLocaleString()} FCFA
                     </td>
                     <td className="px-lg py-4 text-center">

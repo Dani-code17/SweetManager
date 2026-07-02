@@ -115,6 +115,8 @@ model Depense {
   id            String      @id @default(uuid())
   utilisateurId String
   montant       Decimal     @db.Decimal(10, 2)
+  quantite      Decimal?    @db.Decimal(10, 3)
+  libelle       String?     @db.VarChar(200)
   categorie     String      @db.VarChar(100)
   fournisseur   String?     @db.VarChar(150)
   description   String?
